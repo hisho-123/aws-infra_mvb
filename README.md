@@ -9,20 +9,38 @@
 ### 構成図
 ```plantuml
 @startuml
+!include <awslib/AWSCommon>
+!include <awslib/Compute/EC2>
+!include <awslib/Database/RDS>
+!include <awslib/NetworkingContentDelivery/ElasticLoadBalancingApplicationLoadBalancer>
+!include <awslib/Groups/AWSCloud>
+!include <awslib/Groups/VPC>
+!include <awslib/Groups/AvailabilityZone>
 
-rectangle "vpc"{
-  node "Load balancer" as road
-  node "web" as web1
-  node "web" as web2
-  database "db\nmaster" as db_master
-  database "db\nreplica" as db_replica
+AWSCloudGroup(cloud) {
+  VPCGroup(vpc) {
+    ElasticLoadBalancingApplicationLoadBalancer(alb, "ALB", "")
+
+    AvailabilityZoneGroup(az1, "AZ1") {
+      EC2(web1, "web", "")
+      RDS(db_master, "db\nmaster", "")
+    }
+
+    AvailabilityZoneGroup(az2, "AZ2") {
+      EC2(web2, "web", "")
+      RDS(db_replica, "db\nreplica", "")
+    }
+  }
 }
 
-road --> web1
-road --> web2
+alb --> web1
+alb --> web2
 web1 --> db_master
 web2 --> db_master
-db_master -> db_replica : replication
+db_master --> db_replica: replication
+
+web1 -[hidden] web2
+web2 -[hidden]- db_replica
 @enduml
 ```
 

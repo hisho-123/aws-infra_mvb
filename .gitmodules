@@ -1,0 +1,3 @@
+[submodule "plantuml/aws"]
+	path = plantuml/aws
+	url = https://github.com/awslabs/aws-icons-for-plantuml.git
