@@ -52,3 +52,28 @@ variable "db_password" {
   default     = "password123"
   sensitive   = true
 }
+
+# Schedule Control Variables
+variable "enable_schedule" {
+  description = "Enable scheduled start/stop of ASG and RDS"
+  type        = bool
+  default     = false
+}
+
+variable "schedule_start" {
+  description = "Cron expression for start schedule (Asia/Tokyo timezone)"
+  type        = string
+  default     = "cron(0 9 ? * * *)" # 毎日9:00
+}
+
+variable "schedule_stop" {
+  description = "Cron expression for stop schedule (Asia/Tokyo timezone)"
+  type        = string
+  default     = "cron(0 20 ? * * *)" # 毎日20:00
+}
+
+variable "asg_desired_capacity" {
+  description = "Desired capacity when ASG is running"
+  type        = number
+  default     = 2
+}
