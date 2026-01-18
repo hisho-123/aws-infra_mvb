@@ -49,7 +49,6 @@ variable "db_username" {
 variable "db_password" {
   description = "Database master password"
   type        = string
-  default     = "password123"
   sensitive   = true
 }
 
@@ -57,7 +56,7 @@ variable "db_password" {
 variable "enable_schedule" {
   description = "Enable scheduled start/stop of ASG and RDS"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "schedule_start" {
@@ -76,4 +75,12 @@ variable "asg_desired_capacity" {
   description = "Desired capacity when ASG is running"
   type        = number
   default     = 2
+}
+
+# HTTPS Configuration
+variable "certificate_arn" {
+  description = "ARN of ACM certificate for HTTPS listener (optional)"
+  type        = string
+  default     = null
+  sensitive   = true
 }

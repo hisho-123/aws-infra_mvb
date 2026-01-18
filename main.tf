@@ -101,13 +101,21 @@ resource "aws_route_table" "private" {
 # Security Groups
 resource "aws_security_group" "alb" {
   name        = "${var.project_name}-alb-sg"
-  description = "Allow HTTP inbound traffic"
+  description = "Allow HTTP and HTTPS inbound traffic"
   vpc_id      = aws_vpc.main.id
 
   ingress {
     description = "HTTP from anywhere"
     from_port   = 80
     to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTPS from anywhere"
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -200,10 +208,25 @@ resource "aws_lb_target_group" "main" {
   }
 }
 
-resource "aws_lb_listener" "front_end" {
+resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
   port              = "80"
   protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.main.arn
+  }
+}
+
+# HTTPSリスナー（証明書がある場合のみ作成）
+resource "aws_lb_listener" "https" {
+  count             = var.certificate_arn != null ? 1 : 0
+  load_balancer_arn = aws_lb.main.arn
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = var.certificate_arn
 
   default_action {
     type             = "forward"
@@ -226,6 +249,10 @@ resource "aws_launch_template" "main" {
   name_prefix   = "${var.project_name}-lt-"
   image_id      = data.aws_ami.amazon_linux_2023.id
   instance_type = var.instance_type
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.ec2_ssm.name
+  }
 
   network_interfaces {
     associate_public_ip_address = false
@@ -287,7 +314,7 @@ resource "aws_db_instance" "master" {
   skip_final_snapshot    = true
   allocated_storage      = 20
   storage_type           = "gp2"
-  backup_retention_period = 1
+  backup_retention_period = 7
 }
 
 resource "aws_db_instance" "replica" {

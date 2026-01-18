@@ -100,3 +100,62 @@ web2 -[hidden]- db_replica
   Default region name [None]: ap-northeast-1
   Default output format [None]: json
   ```
+
+## 環境変数設定
+
+Terraformで使用する機密情報は `.env` ファイルで管理します。
+
+1. `.env` ファイルにデータベースパスワードを設定
+
+   ```bash
+   export TF_VAR_db_password="your_secure_password_here"
+   ```
+
+2. 環境変数が読み込まれたか確認
+
+   ```bash
+   echo $TF_VAR_db_password
+   ```
+
+## Terraform実行
+
+1. 初期化
+
+   ```bash
+   terraform init
+   ```
+
+2. **環境変数を読み込み（重要）**
+
+   ```bash
+   source .env
+   ```
+
+3. プラン確認
+
+   ```bash
+   terraform plan
+   ```
+
+## Session Managerでの接続方法
+
+EC2インスタンスへの接続は、Session Managerを使用します。
+
+```bash
+# インスタンスID取得
+aws ec2 describe-instances \
+  --filters "Name=tag:Name,Values=my-vocaburary-book-web" \
+  --query "Reservations[].Instances[].[InstanceId,State.Name]" \
+  --output table
+
+# Session Manager接続
+aws ssm start-session --target <instance-id>
+```
+
+## HTTPS対応（ACM証明書取得後）
+
+HTTPS化する場合は、ACM証明書を取得後、`terraform.tfvars` に以下を追加してください。
+
+```terraform
+certificate_arn = "arn:aws:acm:ap-northeast-1:xxxx:certificate/xxxx"
+```
