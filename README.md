@@ -8,6 +8,7 @@
 
 ### 構成図
 chromeにて下記構成図をビルドするには、'Markdown Diagrams'という拡張をインストールしてください。
+[mermaid版はこちら](./mermaid/diagrams.md)
 ```plantuml
 @startuml
 !include <awslib/AWSCommon>
