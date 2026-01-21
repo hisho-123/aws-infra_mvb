@@ -7,6 +7,7 @@
 ## 構成
 
 ### 構成図
+chromeにて下記構成図をビルドするには、'Markdown Diagrams'という拡張をインストールしてください。
 ```plantuml
 @startuml
 !include <awslib/AWSCommon>
