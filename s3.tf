@@ -52,3 +52,45 @@ resource "aws_s3_bucket_policy" "frontend" {
 
   depends_on = [aws_cloudfront_distribution.frontend]
 }
+
+# ========================================
+# CodeDeploy Artifacts S3 Bucket
+# ========================================
+
+resource "aws_s3_bucket" "codedeploy_artifacts" {
+  bucket = "${var.project_name}-codedeploy-artifacts"
+
+  tags = {
+    Name = "${var.project_name}-codedeploy-artifacts"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "codedeploy_artifacts" {
+  bucket = aws_s3_bucket.codedeploy_artifacts.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_versioning" "codedeploy_artifacts" {
+  bucket = aws_s3_bucket.codedeploy_artifacts.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "codedeploy_artifacts" {
+  bucket = aws_s3_bucket.codedeploy_artifacts.id
+
+  rule {
+    id     = "expire-old-artifacts"
+    status = "Enabled"
+
+    expiration {
+      days = 30
+    }
+  }
+}

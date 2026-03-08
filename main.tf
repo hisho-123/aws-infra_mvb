@@ -263,6 +263,15 @@ resource "aws_launch_template" "main" {
               #!/bin/bash
               yum update -y
 
+              # CodeDeploy エージェントインストール
+              yum install -y ruby wget
+              cd /tmp
+              wget https://aws-codedeploy-ap-northeast-1.s3.ap-northeast-1.amazonaws.com/latest/install
+              chmod +x ./install
+              ./install auto
+              systemctl enable codedeploy-agent
+              systemctl start codedeploy-agent
+
               # アプリ用ディレクトリ作成
               mkdir -p /opt/my-vocabulary-book
               mkdir -p /var/log/app
