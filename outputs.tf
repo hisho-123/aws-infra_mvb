@@ -27,3 +27,8 @@ output "db_replica_endpoint" {
   description = "The endpoint of the replica database"
   value       = aws_db_instance.replica.endpoint
 }
+
+output "acm_certificate_frontend_arn" {
+  description = "CloudFront 用 ACM 証明書 ARN (us-east-1)"
+  value       = aws_acm_certificate.frontend.arn
+}

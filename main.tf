@@ -262,10 +262,10 @@ resource "aws_launch_template" "main" {
   user_data = base64encode(<<-EOF
               #!/bin/bash
               yum update -y
-              yum install -y httpd
-              systemctl start httpd
-              systemctl enable httpd
-              echo "Hello from $(hostname)" > /var/www/html/index.html
+
+              # アプリ用ディレクトリ作成
+              mkdir -p /opt/my-vocabulary-book
+              mkdir -p /var/log/app
               EOF
   )
 

@@ -84,3 +84,10 @@ variable "certificate_arn" {
   default     = null
   sensitive   = true
 }
+
+# Frontend / CloudFront
+variable "frontend_domain" {
+  description = "フロントエンドのカスタムドメイン (CloudFront alias)"
+  type        = string
+  default     = "my-vocabulary-book.hisho-123.com"
+}
