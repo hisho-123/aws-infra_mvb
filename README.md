@@ -37,7 +37,7 @@ AWSCloudGroup(cloud) {
     CodeDeploy(codedeploy, "CodeDeploy", "")
 
     VPCGroup(vpc) {
-      ElasticLoadBalancingApplicationLoadBalancer(alb, "ALB\napi.my-vocabulary-book.hisho-123.com", "")
+      ElasticLoadBalancingApplicationLoadBalancer(alb, "ALB", "")
 
       AvailabilityZoneGroup(az1, "AZ1") {
         EC2(web1, "EC2\nweb", "")
@@ -56,11 +56,13 @@ actor GHA_FE as "GitHub Actions\n(frontend)"
 actor GHA_BE as "GitHub Actions\n(backend)"
 
 ' ユーザーアクセス
-User --> cf : HTTPS (frontend)
-User --> alb : HTTPS (API)
+User --> cf : HTTPS
 
 ' フロントエンド配信
 cf --> s3_fe : OAC
+
+' バックエンドAPI
+cf --> alb : HTTP /api/*
 
 ' バックエンド
 alb --> web1
