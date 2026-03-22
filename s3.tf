@@ -89,6 +89,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "codedeploy_artifacts" {
     id     = "expire-old-artifacts"
     status = "Enabled"
 
+    filter {}
+
     expiration {
       days = 30
     }

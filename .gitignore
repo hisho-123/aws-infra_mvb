@@ -5,3 +5,5 @@
 *.tfvars
 *.tfplan
 crash.log
+.claude
+.serena

@@ -1,7 +1,7 @@
 variable "project_name" {
   description = "The name of the project"
   type        = string
-  default     = "mvb"
+  default     = "my-vocaburary-book"
 }
 
 variable "vpc_cidr" {
@@ -90,4 +90,10 @@ variable "frontend_domain" {
   description = "フロントエンドのカスタムドメイン (CloudFront alias)"
   type        = string
   default     = "my-vocabulary-book.hisho-123.com"
+}
+
+variable "route53_zone_name" {
+  description = "Route53 Hosted Zone のドメイン名"
+  type        = string
+  default     = "hisho-123.com"
 }

@@ -16,8 +16,10 @@ chromeにて下記構成図をビルドするには、'Markdown Diagrams'とい�
 !include <awslib/Database/RDS>
 !include <awslib/NetworkingContentDelivery/ElasticLoadBalancingApplicationLoadBalancer>
 !include <awslib/NetworkingContentDelivery/CloudFront>
+!include <awslib/NetworkingContentDelivery/Route53>
 !include <awslib/Storage/SimpleStorageService>
 !include <awslib/DeveloperTools/CodeDeploy>
+!include <awslib/SecurityIdentityCompliance/CertificateManager>
 !include <awslib/Groups/AWSCloud>
 !include <awslib/Groups/VPC>
 !include <awslib/Groups/AvailabilityZone>
@@ -27,7 +29,10 @@ actor User
 
 AWSCloudGroup(cloud) {
 
+  Route53(r53, "Route53\nhisho-123.com", "")
+
   RegionGroup(global, "us-east-1") {
+    CertificateManager(acm, "ACM\nCloudFront用証明書", "")
     CloudFront(cf, "CloudFront\nmy-vocabulary-book.hisho-123.com", "")
     SimpleStorageService(s3_fe, "S3\nfrontend", "")
   }
@@ -56,7 +61,12 @@ actor GHA_FE as "GitHub Actions\n(frontend)"
 actor GHA_BE as "GitHub Actions\n(backend)"
 
 ' ユーザーアクセス
-User --> cf : HTTPS
+User --> r53 : DNS名前解決
+r53 --> cf : HTTPS
+
+' ACM DNS検証
+r53 ..> acm : DNS検証 (CNAME)
+acm ..> cf : TLS証明書
 
 ' フロントエンド配信
 cf --> s3_fe : OAC
@@ -86,7 +96,9 @@ web1 -[hidden] web2
 ```
 
 ### 使用サービス
+- Route53 (DNSホスティング、ACM DNS検証)
 - CloudFront (フロントエンド配信、us-east-1 ACM)
+- ACM (CloudFront用TLS証明書、us-east-1)
 - S3 (フロントエンド静的ファイル / CodeDeploy アーティファクト)
 - CodeDeploy (バックエンド自動デプロイ)
 - Application Load Balancer

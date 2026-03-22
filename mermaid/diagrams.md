@@ -5,10 +5,11 @@ graph TB
     GHA_BE(["GitHub Actions\nbackend repo"])
 
     subgraph AWS["AWS Cloud"]
-        subgraph Global["us-east-1 (Global)"]
-            ACM_CF["ACM\nCloudFront用証明書"]
-            CF["CloudFront\nmy-vocabulary-book.hisho-123.com"]
-            S3_FE["S3\nfrontend\n静的ファイル"]
+        subgraph Global["Global"]
+            R53["Route53\nhisho-123.com"]
+            ACM_CF["ACM\nCloudFront用証明書\n(us-east-1)"]
+            CF["CloudFront\nmy-vocabulary-book.hisho-123.com\n(us-east-1)"]
+            S3_FE["S3\nfrontend\n静的ファイル\n(us-east-1)"]
         end
 
         subgraph AP["ap-northeast-1"]
@@ -32,7 +33,11 @@ graph TB
     end
 
     %% ユーザーアクセス
-    User -->|"HTTPS"| CF
+    User -->|"DNS名前解決"| R53
+    R53 -->|"HTTPS"| CF
+
+    %% ACM DNS検証
+    R53 -.->|"DNS検証 (CNAME)"| ACM_CF
 
     %% フロントエンド配信
     CF -->|"OAC"| S3_FE

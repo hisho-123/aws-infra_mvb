@@ -73,6 +73,11 @@ output "github_actions_frontend_role_arn" {
 }
 
 output "acm_certificate_frontend_arn" {
-  description = "CloudFront 用 ACM 証明書 ARN (us-east-1)"
-  value       = aws_acm_certificate.frontend.arn
+  description = "CloudFront 用 ACM 証明書 ARN (us-east-1, 検証済み)"
+  value       = aws_acm_certificate_validation.frontend.certificate_arn
+}
+
+output "route53_name_servers" {
+  description = "お名前.com に設定する NS レコード (4件)"
+  value       = aws_route53_zone.main.name_servers
 }
