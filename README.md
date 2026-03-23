@@ -15,42 +15,96 @@ chromeにて下記構成図をビルドするには、'Markdown Diagrams'とい�
 !include <awslib/Compute/EC2>
 !include <awslib/Database/RDS>
 !include <awslib/NetworkingContentDelivery/ElasticLoadBalancingApplicationLoadBalancer>
+!include <awslib/NetworkingContentDelivery/CloudFront>
+!include <awslib/NetworkingContentDelivery/Route53>
+!include <awslib/Storage/SimpleStorageService>
+!include <awslib/DeveloperTools/CodeDeploy>
+!include <awslib/SecurityIdentityCompliance/CertificateManager>
 !include <awslib/Groups/AWSCloud>
 !include <awslib/Groups/VPC>
 !include <awslib/Groups/AvailabilityZone>
+!include <awslib/Groups/Region>
+
+actor User
 
 AWSCloudGroup(cloud) {
-  VPCGroup(vpc) {
-    ElasticLoadBalancingApplicationLoadBalancer(alb, "ALB", "")
 
-    AvailabilityZoneGroup(az1, "AZ1") {
-      EC2(web1, "web", "")
-      RDS(db_master, "db\nmaster", "")
-    }
+  Route53(r53, "Route53\nhisho-123.com", "")
 
-    AvailabilityZoneGroup(az2, "AZ2") {
-      EC2(web2, "web", "")
-      RDS(db_replica, "db\nreplica", "")
+  RegionGroup(global, "us-east-1") {
+    CertificateManager(acm, "ACM\nCloudFront用証明書", "")
+    CloudFront(cf, "CloudFront\nmy-vocabulary-book.hisho-123.com", "")
+    SimpleStorageService(s3_fe, "S3\nfrontend", "")
+  }
+
+  RegionGroup(ap, "ap-northeast-1") {
+    SimpleStorageService(s3_cd, "S3\nCodeDeploy\nartifacts", "")
+    CodeDeploy(codedeploy, "CodeDeploy", "")
+
+    VPCGroup(vpc) {
+      ElasticLoadBalancingApplicationLoadBalancer(alb, "ALB", "")
+
+      AvailabilityZoneGroup(az1, "AZ1") {
+        EC2(web1, "EC2\nweb", "")
+        RDS(db_master, "RDS\nmaster", "")
+      }
+
+      AvailabilityZoneGroup(az2, "AZ2") {
+        EC2(web2, "EC2\nweb", "")
+        RDS(db_replica, "RDS\nreplica", "")
+      }
     }
   }
 }
 
+actor GHA_FE as "GitHub Actions\n(frontend)"
+actor GHA_BE as "GitHub Actions\n(backend)"
+
+' ユーザーアクセス
+User --> r53 : DNS名前解決
+r53 --> cf : HTTPS
+
+' ACM DNS検証
+r53 ..> acm : DNS検証 (CNAME)
+acm ..> cf : TLS証明書
+
+' フロントエンド配信
+cf --> s3_fe : OAC
+
+' バックエンドAPI
+cf --> alb : HTTP /api/*
+
+' バックエンド
 alb --> web1
 alb --> web2
 web1 --> db_master
 web2 --> db_master
-db_master --> db_replica: replication
+db_master --> db_replica : replication
+
+' CI/CD (frontend)
+GHA_FE --> s3_fe : s3 sync
+GHA_FE --> cf : invalidation
+
+' CI/CD (backend)
+GHA_BE --> s3_cd : upload artifact
+GHA_BE --> codedeploy : create-deployment
+codedeploy --> web1 : deploy
+codedeploy --> web2 : deploy
 
 web1 -[hidden] web2
-web2 -[hidden]- db_replica
 @enduml
 ```
 
 ### 使用サービス
-- Load balancer
+- Route53 (DNSホスティング、ACM DNS検証)
+- CloudFront (フロントエンド配信、us-east-1 ACM)
+- ACM (CloudFront用TLS証明書、us-east-1)
+- S3 (フロントエンド静的ファイル / CodeDeploy アーティファクト)
+- CodeDeploy (バックエンド自動デプロイ)
+- Application Load Balancer
 - Auto Scaling Group
 - EC2
-- RDS
+- RDS (MySQL, master/replica)
 
 
 ## 構築手順
