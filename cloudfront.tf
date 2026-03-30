@@ -18,6 +18,31 @@ resource "aws_acm_certificate" "frontend" {
 }
 
 # ========================================
+# CloudFront Function
+# ========================================
+
+resource "aws_cloudfront_function" "redirect_root" {
+  name    = "${var.project_name}-redirect-root"
+  runtime = "cloudfront-js-2.0"
+  publish = true
+  code    = <<-EOF
+    function handler(event) {
+      var request = event.request;
+      if (request.uri === '/') {
+        return {
+          statusCode: 302,
+          statusDescription: 'Found',
+          headers: {
+            location: { value: '/login' }
+          }
+        };
+      }
+      return request;
+    }
+  EOF
+}
+
+# ========================================
 # CloudFront Distribution
 # ========================================
 
@@ -83,6 +108,11 @@ resource "aws_cloudfront_distribution" "frontend" {
     min_ttl     = 0
     default_ttl = 3600
     max_ttl     = 86400
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.redirect_root.arn
+    }
   }
 
   # SPA 用: 404/403 → index.html にフォールバック
