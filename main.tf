@@ -198,7 +198,7 @@ resource "aws_lb_target_group" "main" {
   vpc_id   = aws_vpc.main.id
 
   health_check {
-    path                = "/"
+    path                = "/api/home"
     healthy_threshold   = 2
     unhealthy_threshold = 10
   }
@@ -260,7 +260,7 @@ resource "aws_launch_template" "main" {
               yum update -y
 
               # CodeDeploy エージェントインストール
-              yum install -y ruby wget
+              yum install -y ruby wget mysql
               cd /tmp
               wget https://aws-codedeploy-ap-northeast-1.s3.ap-northeast-1.amazonaws.com/latest/install
               chmod +x ./install
