@@ -193,6 +193,59 @@ Terraformで使用する機密情報は `.env` ファイルで管理します。
    terraform plan
    ```
 
+## CI/CDセットアップ
+
+Terraform適用後、CI/CDが動作するために以下を手動で1回実施する。
+
+### 1. terraform outputで値を確認
+
+```bash
+source .env
+terraform output
+```
+
+### 2. SSM Parameter Store にバックエンド環境変数を登録（初回のみ）
+
+バックエンドのEC2が起動時に読み込む環境変数をSSMに保存する。
+
+```bash
+# JWT_KEY を生成
+openssl rand -base64 32
+
+# SSMに登録（<>の値を置き換える）
+aws ssm put-parameter \
+  --name "/mvb/backend/env" \
+  --type SecureString \
+  --value "DB_USER=admin
+DB_PASSWORD=<.envのTF_VAR_db_passwordの値>
+DB_HOST=<terraform output db_master_endpoint の値（末尾の:3306を除いたホスト名部分）>
+DB_PORT=3306
+DB_NAME=my_vocabulary_book
+JWT_KEY=<openssl rand -base64 32 で生成した値>" \
+  --region ap-northeast-1
+```
+
+### 3. GitHub Repository Secrets を設定
+
+各リポジトリの `Settings > Secrets and variables > Actions > Repository secrets` に追加する。
+
+**`my-vocabulary-book_backend` リポジトリ**
+
+| Secret名 | 値の取得コマンド |
+|---|---|
+| `AWS_ROLE_ARN_BACKEND` | `terraform output github_actions_backend_role_arn` |
+| `CODEDEPLOY_BUCKET` | `terraform output codedeploy_artifacts_bucket` |
+| `CODEDEPLOY_APP` | `terraform output codedeploy_app_name` |
+| `CODEDEPLOY_DEPLOYMENT_GROUP` | `terraform output codedeploy_deployment_group_name` |
+
+**`my-vocabulary-book_frontend` リポジトリ**
+
+| Secret名 | 値の取得コマンド |
+|---|---|
+| `AWS_ROLE_ARN_FRONTEND` | `terraform output github_actions_frontend_role_arn` |
+| `FRONTEND_BUCKET` | `terraform output frontend_s3_bucket` |
+| `CLOUDFRONT_DISTRIBUTION_ID` | `terraform output cloudfront_distribution_id` |
+
 ## Session Managerでの接続方法
 
 EC2インスタンスへの接続は、Session Managerを使用します。
