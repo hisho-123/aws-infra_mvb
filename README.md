@@ -95,6 +95,58 @@ web1 -[hidden] web2
 @enduml
 ```
 
+### アクセスフロー
+
+#### 静的コンテンツ（HTML/CSS/JS）の取得フロー
+
+```plantuml
+@startuml
+actor User
+
+participant "Route53\n(hisho-123.com)" as R53
+participant "CloudFront\n(Edge Location)" as CF
+participant "CloudFront Function\n(redirect_root)" as CFF
+participant "S3\n(Frontend Bucket)" as S3
+
+User -> R53 : DNS名前解決\nmy-vocabulary-book.hisho-123.com
+R53 --> User : ALIAS → CloudFront Domain
+
+User -> CF : HTTPS GET /
+CF -> CFF : Viewer Request (path="/")
+CFF --> CF : 302 Redirect → /login
+CF --> User : 302 /login
+
+User -> CF : HTTPS GET /login
+note over CF : キャッシュ確認\nTTL: 3600〜86400s
+CF -> S3 : GET /login (OAC + SigV4署名)
+S3 --> CF : HTML
+CF --> User : HTTPS Response (HTML/CSS/JS)
+@enduml
+```
+
+#### APIリクエストのフロー（/api/*）
+
+```plantuml
+@startuml
+actor User
+
+participant "CloudFront\n(Edge Location)" as CF
+participant "ALB\n(Public Subnet)" as ALB
+participant "EC2\n(Private Subnet / ASG)" as EC2
+participant "RDS Master\n(Private Subnet)" as RDS
+
+User -> CF : HTTPS POST /api/...
+note over CF : キャッシュなし (TTL=0)\n全Headerを転送
+CF -> ALB : HTTP POST /api/... (port 80)\n※CloudFront IPのみ許可
+ALB -> EC2 : HTTP POST /api/... (port 80)\n※ALB SGからのみ許可
+EC2 -> RDS : MySQL Query (port 3306)\n※Web SGからのみ許可
+RDS --> EC2 : Query Result
+EC2 --> ALB : HTTP Response
+ALB --> CF : HTTP Response
+CF --> User : HTTPS Response
+@enduml
+```
+
 ### 使用サービス
 - Route53 (DNSホスティング、ACM DNS検証)
 - CloudFront (フロントエンド配信、us-east-1 ACM)
