@@ -283,12 +283,14 @@ resource "aws_launch_template" "main" {
 }
 
 resource "aws_autoscaling_group" "main" {
-  name                = "${var.project_name}-asg"
-  vpc_zone_identifier = aws_subnet.private[*].id
-  desired_capacity    = 2
-  max_size            = 2
-  min_size            = 2
-  target_group_arns   = [aws_lb_target_group.main.arn]
+  name                      = "${var.project_name}-asg"
+  vpc_zone_identifier       = aws_subnet.private[*].id
+  desired_capacity          = 2
+  max_size                  = 2
+  min_size                  = 2
+  target_group_arns         = [aws_lb_target_group.main.arn]
+  health_check_type         = "ELB"
+  health_check_grace_period = 300
 
   launch_template {
     id      = aws_launch_template.main.id
@@ -307,18 +309,18 @@ resource "aws_db_subnet_group" "main" {
 }
 
 resource "aws_db_instance" "master" {
-  identifier             = "${var.project_name}-db-master"
-  engine                 = "mysql"
-  engine_version         = "8.0"
-  instance_class         = var.db_instance_type
-  username               = var.db_username
-  password               = var.db_password
-  db_subnet_group_name   = aws_db_subnet_group.main.name
-  vpc_security_group_ids = [aws_security_group.db.id]
-  availability_zone      = var.availability_zones[0]
-  skip_final_snapshot    = true
-  allocated_storage      = 20
-  storage_type           = "gp2"
+  identifier              = "${var.project_name}-db-master"
+  engine                  = "mysql"
+  engine_version          = "8.0"
+  instance_class          = var.db_instance_type
+  username                = var.db_username
+  password                = var.db_password
+  db_subnet_group_name    = aws_db_subnet_group.main.name
+  vpc_security_group_ids  = [aws_security_group.db.id]
+  availability_zone       = var.availability_zones[0]
+  skip_final_snapshot     = true
+  allocated_storage       = 20
+  storage_type            = "gp2"
   backup_retention_period = 7
 }
 
