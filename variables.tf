@@ -65,10 +65,16 @@ variable "schedule_start" {
   default     = "cron(0 9 ? * * *)" # 毎日9:00
 }
 
-variable "schedule_rds_start" {
-  description = "Cron expression for RDS start schedule (Asia/Tokyo timezone). Defaults to 10 minutes before ASG start to allow RDS to become available first."
+variable "schedule_rds_master_start" {
+  description = "Cron expression for RDS Master start schedule (Asia/Tokyo timezone). Starts before Replica to allow Master to become available first."
   type        = string
-  default     = "cron(50 8 ? * * *)" # 毎日8:50 (ASG起動の10分前)
+  default     = "cron(30 8 ? * * *)" # 毎日8:30 (Replica起動の15分前)
+}
+
+variable "schedule_rds_replica_start" {
+  description = "Cron expression for RDS Replica start schedule (Asia/Tokyo timezone). Starts after Master to ensure Master is available."
+  type        = string
+  default     = "cron(45 8 ? * * *)" # 毎日8:45 (ASG起動の15分前)
 }
 
 variable "schedule_stop" {
