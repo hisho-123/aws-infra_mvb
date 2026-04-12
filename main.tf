@@ -257,10 +257,8 @@ resource "aws_launch_template" "main" {
 
   user_data = base64encode(<<-EOF
               #!/bin/bash
-              yum update -y
-
               # CodeDeploy エージェントインストール
-              yum install -y ruby wget mysql
+              yum install -y ruby wget
               cd /tmp
               wget https://aws-codedeploy-ap-northeast-1.s3.ap-northeast-1.amazonaws.com/latest/install
               chmod +x ./install

@@ -67,7 +67,7 @@ resource "aws_scheduler_schedule" "rds_master_start" {
     mode = "OFF"
   }
 
-  schedule_expression          = var.schedule_rds_start
+  schedule_expression          = var.schedule_rds_master_start
   schedule_expression_timezone = "Asia/Tokyo"
 
   target {
@@ -109,7 +109,7 @@ resource "aws_scheduler_schedule" "rds_replica_start" {
     mode = "OFF"
   }
 
-  schedule_expression          = var.schedule_rds_start
+  schedule_expression          = var.schedule_rds_replica_start
   schedule_expression_timezone = "Asia/Tokyo"
 
   target {
